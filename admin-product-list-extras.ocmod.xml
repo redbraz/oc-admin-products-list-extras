@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+  <name>Admin Products list by date added</name>
+  <code>reds_admin_product_list_date_added</code>
+	<version>3.0</version>
+	<author>REDS</author>
+	<link>https://www.agenciaprai.com/</link>
+	
+	<file path="admin/language/en-gb/catalog/product.php">
+		<operation error="log">
+			<search><![CDATA[// Error]]></search>
+			<add position="before"><![CDATA[
+				$_['column_date']        = 'Date';
+				$_['help_date']          = 'Click to sort the registration values in the order they were modified!';
+				$_['column_viewed']      = 'Viewed';
+				$_['column_id']      		 = 'ID';
+				$_['column_sku']         = 'SKU';
+			]]></add>
+		</operation>
+	</file>
+	<file path="admin/language/pt-br/catalog/product.php">
+		<operation error="log">
+			<search><![CDATA[// Error]]></search>
+			<add position="before"><![CDATA[
+				$_['column_date']        = 'Datas';
+				$_['help_date']          = 'Clique em uma das setas para alternar a ordem de classificação pela data de cadastro ou data de modificação.';
+				$_['column_viewed']      = 'Visto';
+				$_['column_id']      		 = 'ID';
+				$_['column_sku']         = 'SKU';
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="admin/controller/catalog/product.php">
+		<operation error="log">
+			<search><![CDATA[$sort = 'pd.name';]]></search>
+			<add position="replace"><![CDATA[$sort = 'p.date_added';]]></add>
+		</operation>
+		<operation error="log">
+			<search><![CDATA[$order = 'ASC';]]></search>
+			<add position="replace"><![CDATA[$order = 'DESC';]]></add>
+		</operation>
+		<operation error="log">
+			<search><![CDATA[if (is_file(DIR_IMAGE . $result['image'])) {]]></search>
+			<add position="before"><![CDATA[$href = $this->request->server['HTTPS'] ? HTTPS_CATALOG : HTTP_CATALOG;]]></add>
+		</operation>
+		<operation error="log">
+			<search><![CDATA['status'     => $result['status'] ? $this->language->get('text_enabled') : $this->language->get('text_disabled'),]]></search>
+			<add position="before"><![CDATA[
+			'sku'     => $result['sku'],
+			'viewed'     => $result['viewed'],
+			'date_added' 		=> date($this->language->get('date_format_short'), strtotime($result['date_added'])).' '.'<span class="alert alert-info"><i class="fa fa-clock-o"></i>'.' '.date($this->language->get('time_format'), strtotime($result['date_added'])).' '.'</span>',
+			'date_modified' => date($this->language->get('date_format_short'), strtotime($result['date_modified'])).' '.'<span class="alert alert-info"><i class="fa fa-clock-o"></i>'.' '.date($this->language->get('time_format'), strtotime($result['date_modified'])).' '.'</span>',
+			'href_view'	 => $href.'index.php?route=product/product&product_id='.$result['product_id'],
+			]]></add>
+		</operation>
+	</file>
+		
+		<file path="admin/view/template/catalog/product_list.twig">
+			<operation error="log">
+				<search><![CDATA[<td class="text-left">{% if sort == 'p.status' %}]]></search>
+				<add position="before"><![CDATA[
+				<td class="text-center"><a href="{{ sort_status~'&sort=p.date_added' }}"> <i class="fa fa-chevron-up"></i></a>&nbsp;<font title="{{ help_date }}" data-toggle="tooltip">{{ column_date }}</font>&nbsp;<a href="{{ sort_status~'&sort=p.date_modified' }}"> <i class="fa fa-chevron-down"></i></a></td>
+				<td class="text-center">{{ column_viewed }}</td>
+				]]></add>
+			</operation>
+			<operation error="log">
+				<search><![CDATA[<td class="text-left">{{ product.name }}</td>]]></search>
+				<add position="replace"><![CDATA[
+					<td class="text-left"><span data-toggle="tooltip" data-html="true" title="{{ column_id }}: {{ product.product_id }}<br>{{ column_sku }}: {{ product.sku }}">{{ product.name }}</td>
+				]]></add>
+			</operation>
+			
+			<operation error="log">
+				<search><![CDATA[<td class="text-left">{{ product.status }}</td>]]></search>
+				<add position="before"><![CDATA[
+				<td class="text-center">
+												<ul class="list-unstyled">
+													<li><i class="fa fa-calendar" data-toggle="tooltip" title="{{ text_date_added }}"></i> {{ product.date_added }}</li>
+													<li><i class="fa fa-refresh" data-toggle="tooltip" title="{{ text_date_modified }}"></i> {{ product.date_modified }}</li>
+												</ul>
+											</td>
+											<td class="text-center">
+												{% if product.viewed <= 50 %}
+												<span class="text-danger"><i class="fa fa-line-chart fa-2x"></i><br> {{ product.viewed }} {{ text_viewed }}</span>
+												{% elseif product.viewed <= 100 %}
+												<span class="text-warning"><i class="fa fa-line-chart fa-2x"></i><br> {{ product.viewed }} {{ text_viewed }}</span>
+												{% else %}
+												<span class="text-success"><i class="fa fa-line-chart fa-2x"></i><br> {{ product.viewed }} {{ text_viewed }}</span>
+												{% endif %}
+											</td>
+				]]></add>
+			</operation>
+			<operation error="log">
+				<search><![CDATA[<td class="text-right"><a href="{{ product.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>]]></search>
+				<add position="replace"><![CDATA[
+				<td class="text-right">
+												<div class="btn-group">
+													<a href="{{ product.href_view }}" data-toggle="tooltip" title="{{ button_view }}" class="btn btn-default" target="_blank"><i class="fa fa-eye"></i></a>
+													<a href="{{ product.edit }}" data-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary"><i class="fa fa-edit"></i></a>
+												</div>
+											</td>
+				]]></add>
+			</operation>
+			<operation error="log">
+				<search><![CDATA[<td class="text-center" colspan="8">{{ text_no_results }}</td>]]></search>
+				<add position="replace"><![CDATA[<td class="text-center" colspan="10">{{ text_no_results }}</td>]]></add>
+			</operation>
+			<operation error="log">
+				<search><![CDATA[{{ footer }}]]></search>
+				<add position="before"><![CDATA[
+					<style>.alert.alert-info {padding: 1px 5px;margin-bottom: 0;font-size: 10px;display: block;}</style>
+				]]></add>
+			</operation>
+
+    </file>
+		
+</modification>
